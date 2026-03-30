@@ -2,9 +2,17 @@
 export interface User {
   id: string;
   email: string;
-  name: string;
-  avatar?: string;
+  name?: string;
+  avatar?: string | null;
+  role: 'user' | 'admin';
   createdAt: string;
+  updatedAt: string;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  refresh_token: string;
+  user: User;
 }
 
 export interface AuthSession {
@@ -16,32 +24,37 @@ export interface AuthSession {
 // Chat Types
 export interface ChatMessage {
   id: string;
+  sessionId: string;
   role: 'user' | 'assistant';
   content: string;
-  timestamp: string;
+  createdAt: string;
   metadata?: Record<string, any>;
 }
 
 export interface ChatSession {
   id: string;
   title: string;
-  messages: ChatMessage[];
+  userId: string;
+  messages?: ChatMessage[];
   createdAt: string;
   updatedAt: string;
-  itinerary?: TravelItinerary;
 }
 
 // Travel Itinerary Types
 export interface TravelItinerary {
   id: string;
+  userId: string;
   destination: string;
   startDate: string;
   endDate: string;
-  activities: Activity[];
-  accommodations: Accommodation[];
-  flights: Flight[];
-  budget: number;
-  notes: string;
+  activities?: Activity[];
+  accommodations?: Accommodation[];
+  flights?: Flight[];
+  budget?: number;
+  notes?: string;
+  preferences?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Activity {

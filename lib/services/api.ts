@@ -1,6 +1,4 @@
 // API Service - Central place for all backend calls
-// TODO: Replace with your actual backend URL once ready
-
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 interface RequestOptions {
@@ -8,6 +6,12 @@ interface RequestOptions {
   headers?: Record<string, string>;
   body?: any;
   token?: string;
+}
+
+class ApiError extends Error {
+  constructor(public statusCode: number, public statusText: string) {
+    super(`API Error: ${statusCode} ${statusText}`);
+  }
 }
 
 async function apiCall<T>(
@@ -38,7 +42,7 @@ async function apiCall<T>(
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
     if (!response.ok) {
-      throw new Error(`API Error: ${response.statusText}`);
+      throw new ApiError(response.status, response.statusText);
     }
 
     return await response.json();
@@ -51,31 +55,35 @@ async function apiCall<T>(
 // Auth Service
 export const authService = {
   async login(email: string, password: string) {
-    // TODO: Implement actual login
-    return apiCall('/auth/login', {
+    return apiCall<any>('/auth/login', {
       method: 'POST',
       body: { email, password },
     });
   },
 
-  async register(email: string, password: string, name: string) {
-    // TODO: Implement actual registration
-    return apiCall('/auth/register', {
+  async register(email: string, password: string, name?: string) {
+    return apiCall<any>('/auth/register', {
       method: 'POST',
       body: { email, password, name },
     });
   },
 
-  async logout() {
-    // TODO: Implement actual logout
-    return apiCall('/auth/logout', {
+  async logout(token: string) {
+    return apiCall<any>('/auth/logout', {
       method: 'POST',
+      token,
+    });
+  },
+
+  async refresh(token: string) {
+    return apiCall<any>('/auth/refresh', {
+      method: 'POST',
+      token,
     });
   },
 
   async getCurrentUser(token: string) {
-    // TODO: Implement actual user fetch
-    return apiCall('/auth/me', {
+    return apiCall<any>('/auth/me', {
       token,
     });
   },
@@ -83,29 +91,8 @@ export const authService = {
 
 // Chat Service
 export const chatService = {
-  async sendMessage(
-    sessionId: string,
-    message: string,
-    token: string
-  ) {
-    // TODO: Implement actual chat API
-    return apiCall(`/chat/${sessionId}/messages`, {
-      method: 'POST',
-      body: { content: message },
-      token,
-    });
-  },
-
-  async getChatHistory(sessionId: string, token: string) {
-    // TODO: Implement actual history fetch
-    return apiCall(`/chat/${sessionId}`, {
-      token,
-    });
-  },
-
   async createSession(title: string, token: string) {
-    // TODO: Implement session creation
-    return apiCall('/chat/sessions', {
+    return apiCall<any>('/chat/sessions', {
       method: 'POST',
       body: { title },
       token,
@@ -113,47 +100,52 @@ export const chatService = {
   },
 
   async listSessions(token: string) {
-    // TODO: Implement sessions listing
-    return apiCall('/chat/sessions', {
+    return apiCall<any>('/chat/sessions', {
+      token,
+    });
+  },
+
+  async getSession(sessionId: string, token: string) {
+    return apiCall<any>(`/chat/${sessionId}`, {
+      token,
+    });
+  },
+
+  async sendMessage(sessionId: string, content: string, token: string) {
+    return apiCall<any>(`/chat/${sessionId}/messages`, {
+      method: 'POST',
+      body: { content },
       token,
     });
   },
 };
 
-// Travel Planning Service
+// Travel Service
 export const travelService = {
   async generateItinerary(
     destination: string,
     startDate: string,
     endDate: string,
-    preferences: Record<string, any>,
+    preferences: Record<string, any> | undefined,
     token: string
   ) {
-    // TODO: Implement AI itinerary generation
-    return apiCall('/travel/generate-itinerary', {
+    return apiCall<any>('/travel/generate-itinerary', {
       method: 'POST',
-      body: {
-        destination,
-        startDate,
-        endDate,
-        preferences,
-      },
+      body: { destination, startDate, endDate, preferences },
       token,
     });
   },
 
-  async updateItinerary(itineraryId: string, updates: any, token: string) {
-    // TODO: Implement itinerary update
-    return apiCall(`/travel/itineraries/${itineraryId}`, {
+  async updateItinerary(id: string, updates: Record<string, any>, token: string) {
+    return apiCall<any>(`/travel/itineraries/${id}`, {
       method: 'PUT',
-      body: updates,
+      body: { updates },
       token,
     });
   },
 
-  async exportItinerary(itineraryId: string, format: 'pdf' | 'json', token: string) {
-    // TODO: Implement export functionality
-    return apiCall(`/travel/itineraries/${itineraryId}/export?format=${format}`, {
+  async exportItinerary(id: string, format: 'pdf' | 'json', token: string) {
+    return apiCall<any>(`/travel/itineraries/${id}/export?format=${format}`, {
       token,
     });
   },
