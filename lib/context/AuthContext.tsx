@@ -3,14 +3,13 @@
 import {
   createContext,
   useContext,
-  useState,
-  useEffect,
   ReactNode,
+  useState,
   useCallback,
 } from 'react';
-import { User, AuthSession, AuthResponse } from '../types';
-import { localAuthService } from '../services/auth';
-import { authService } from '../services/api';
+import { useSession } from 'next-auth/react';
+import { authService } from '../services/auth';
+import { User, AuthSession } from '../types';
 
 interface AuthContextType {
   session: AuthSession;
@@ -25,85 +24,21 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<AuthSession>({
-    user: null,
-    isAuthenticated: false,
-    isLoading: true,
-  });
+  const { data: nextAuthSession, status } = useSession();
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize session from localStorage and verify with backend
-  useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        const token = localAuthService.getToken();
-
-        if (token) {
-          // Verify token with backend
-          try {
-            const user = await authService.getCurrentUser(token);
-            setSession({
-              user,
-              isAuthenticated: true,
-              isLoading: false,
-            });
-          } catch (tokenError) {
-            // Token expired or invalid, try to refresh
-            try {
-              const refreshed = await authService.refresh(token);
-              if (refreshed.access_token) {
-                localAuthService.setToken(refreshed.access_token);
-                setSession({
-                  user: refreshed.user,
-                  isAuthenticated: true,
-                  isLoading: false,
-                });
-              } else {
-                throw new Error('Token refresh failed');
-              }
-            } catch (refreshError) {
-              // Refresh failed, clear auth
-              localAuthService.clearAuth();
-              setSession({
-                user: null,
-                isAuthenticated: false,
-                isLoading: false,
-              });
-            }
-          }
-        } else {
-          setSession({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false,
-          });
-        }
-      } catch (err) {
-        console.error('Auth initialization error:', err);
-        setSession({
-          user: null,
-          isAuthenticated: false,
-          isLoading: false,
-        });
-      }
-    };
-
-    initializeAuth();
-  }, []);
+  // Map NextAuth session to our session format
+  const session: AuthSession = {
+    user: nextAuthSession?.user as User | null,
+    isAuthenticated: !!nextAuthSession?.user,
+    isLoading: status === 'loading',
+  };
 
   const login = useCallback(async (email: string, password: string) => {
     setError(null);
     try {
-      const response: AuthResponse = await authService.login(email, password);
-
-      localAuthService.setToken(response.access_token);
-      localAuthService.setUser(response.user);
-
-      setSession({
-        user: response.user,
-        isAuthenticated: true,
-        isLoading: false,
-      });
+      await authService.login(email, password);
+      // NextAuth will handle session update automatically
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Login failed';
       setError(message);
@@ -115,20 +50,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (email: string, password: string, name?: string) => {
       setError(null);
       try {
-        const response: AuthResponse = await authService.register(
-          email,
-          password,
-          name
-        );
-
-        localAuthService.setToken(response.access_token);
-        localAuthService.setUser(response.user);
-
-        setSession({
-          user: response.user,
-          isAuthenticated: true,
-          isLoading: false,
-        });
+        await authService.register(email, password, name);
+        // After registration, user can login
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Registration failed';
         setError(message);
@@ -141,19 +64,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     setError(null);
     try {
-      const token = localAuthService.getToken();
-      if (token) {
-        await authService.logout(token);
-      }
+      await authService.logout();
     } catch (err) {
-      console.error('Logout API error:', err);
-    } finally {
-      localAuthService.clearAuth();
-      setSession({
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-      });
+      console.error('Logout error:', err);
     }
   }, []);
 

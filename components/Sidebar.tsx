@@ -1,22 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useChat } from '@/lib/context/ChatContext';
 
 export default function Sidebar() {
-  const { sessions, createSession, currentSession, setCurrentSession } = useChat();
+  const { sessions, createSession, currentSession, setCurrentSession, loadSessions } = useChat();
   const [title, setTitle] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
-  const handleNewChat = (e: React.FormEvent) => {
+  const handleNewChat = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (title.trim()) {
-      createSession(title);
+    if (!title.trim()) return;
+
+    try {
+      await createSession(title);
       setTitle('');
       setIsCreating(false);
+    } catch (err) {
+      console.error('Failed to create session:', err);
     }
   };
+
+useEffect(() => {
+  loadSessions();
+}, [loadSessions]);
 
   return (
     <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full overflow-hidden">{/* Changed from h-screen to h-full */}
@@ -75,9 +83,9 @@ export default function Sidebar() {
           {sessions.length === 0 ? (
             <p className="text-xs text-gray-400">No chats yet. Start one above!</p>
           ) : (
-            sessions.map((session) => (
+            sessions.map((session, index) => (
               <button
-                key={session.id}
+                key={`${session.id ?? 'session'}-${index}`}
                 onClick={() => setCurrentSession(session)}
                 className={`w-full text-left px-3 py-2 rounded-lg transition text-sm truncate ${
                   currentSession?.id === session.id

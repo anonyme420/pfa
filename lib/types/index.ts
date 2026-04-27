@@ -29,6 +29,7 @@ export interface ChatMessage {
   content: string;
   createdAt: string;
   metadata?: Record<string, any>;
+  timestamp:string;
 }
 
 export interface ChatSession {
@@ -38,58 +39,6 @@ export interface ChatSession {
   messages?: ChatMessage[];
   createdAt: string;
   updatedAt: string;
-}
-
-// Travel Itinerary Types
-export interface TravelItinerary {
-  id: string;
-  userId: string;
-  destination: string;
-  startDate: string;
-  endDate: string;
-  activities?: Activity[];
-  accommodations?: Accommodation[];
-  flights?: Flight[];
-  budget?: number;
-  notes?: string;
-  preferences?: Record<string, any>;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Activity {
-  id: string;
-  name: string;
-  date: string;
-  time?: string;
-  duration?: number;
-  location: string;
-  description: string;
-  cost?: number;
-  category: string;
-}
-
-export interface Accommodation {
-  id: string;
-  name: string;
-  checkInDate: string;
-  checkOutDate: string;
-  address: string;
-  costPerNight: number;
-  nights: number;
-  bookingUrl?: string;
-}
-
-export interface Flight {
-  id: string;
-  airline: string;
-  departureCity: string;
-  arrivalCity: string;
-  departureTime: string;
-  arrivalTime: string;
-  flightNumber: string;
-  cost: number;
-  bookingUrl?: string;
 }
 
 // API Response Types
@@ -103,5 +52,5 @@ export interface ApiResponse<T> {
 export interface ChatResponse {
   message: ChatMessage;
   suggestions?: string[];
-  updatedItinerary?: TravelItinerary;
+  
 }

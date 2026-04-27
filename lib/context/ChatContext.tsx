@@ -16,6 +16,7 @@ interface ChatContextType {
   sessions: ChatSession[];
   createSession: (title: string) => Promise<void>;
   sendMessage: (content: string) => Promise<ChatMessage>;
+  addMessage: (message: ChatMessage) => void;
   setCurrentSession: (session: ChatSession) => Promise<void>;
   loadSessions: () => Promise<void>;
   isLoading: boolean;
@@ -38,11 +39,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      const token = localStorage.getItem('travelai_token');
-      if (!token) throw new Error('No auth token');
-
-      const response = await chatService.listSessions(token);
-      setSessionsState(response || []);
+      const response = await chatService.getSessions();
+      setSessionsState(response.sessions || []);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load sessions';
       setError(message);
@@ -60,12 +58,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       setError(null);
 
       try {
-        const token = localStorage.getItem('travelai_token');
-        if (!token) throw new Error('No auth token');
-
-        const newSession = await chatService.createSession(title, token);
-        setSessionsState((prev) => [newSession, ...prev]);
-        setCurrentSessionState(newSession);
+        const response = await chatService.createSession(title);
+        const newSession = response.session;
+        const normalizedSession = { ...newSession, messages: newSession.messages ?? [] };
+        setSessionsState((prev) => [normalizedSession, ...prev]);
+        setCurrentSessionState(normalizedSession);
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to create session';
         setError(message);
@@ -84,11 +81,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      const token = localStorage.getItem('travelai_token');
-      if (!token) throw new Error('No auth token');
-
-      const fullSession = await chatService.getSession(session.id, token);
-      setCurrentSessionState(fullSession);
+      const response = await chatService.getSession(session.id);
+      const fullSession = response.session;
+      setCurrentSessionState({ ...fullSession, messages: fullSession.messages ?? [] });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load session';
       setError(message);
@@ -106,22 +101,20 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       setError(null);
 
       try {
-        const token = localStorage.getItem('travelai_token');
-        if (!token) throw new Error('No auth token');
+        const response = await chatService.sendMessage(currentSession.id, 'user', content);
+        const newMessage = response.message;
 
-        const response = await chatService.sendMessage(currentSession.id, content, token);
-        
         // Update current session with new message
         setCurrentSessionState((prev) => {
           if (!prev) return prev;
           return {
             ...prev,
-            messages: [...(prev.messages || []), response],
+            messages: [...(prev.messages || []), newMessage],
             updatedAt: new Date().toISOString(),
           };
         });
 
-        return response;
+        return newMessage;
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to send message';
         setError(message);
@@ -131,6 +124,17 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     [currentSession, authSession.user]
   );
 
+  const addMessage = useCallback((message: ChatMessage) => {
+    setCurrentSessionState((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        messages: [...(prev.messages || []), message],
+        updatedAt: new Date().toISOString(),
+      };
+    });
+  }, []);
+
   return (
     <ChatContext.Provider
       value={{
@@ -138,6 +142,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         sessions,
         createSession,
         sendMessage,
+        addMessage,
         setCurrentSession,
         loadSessions,
         isLoading,
