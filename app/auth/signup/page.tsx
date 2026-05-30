@@ -4,176 +4,262 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/context/AuthContext';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+import { Plane, ArrowRight, Eye, EyeOff, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function SignupPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
-
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError('Passwords do not match.');
       return;
     }
-
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError('Password must be at least 6 characters.');
       return;
     }
-
     setIsLoading(true);
-
     try {
       await register(email, password, name);
-      router.push('/chat');
+      setSuccess(true);
+      setTimeout(() => router.push('/auth/login'), 1800);
     } catch (err) {
-      setError('Failed to create account. Please try again.');
-      console.error(err);
+      const msg = err instanceof Error ? err.message : 'Failed to create account.';
+      setError(msg === 'User already exists'
+        ? 'An account with this email already exists. Try signing in instead.'
+        : msg);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-      <main className="flex-1 flex items-center justify-center py-12 px-4">
-        <div className="w-full max-w-md space-y-8">
-          {/* Header */}
-          <div className="text-center">
-            <h1 className="text-3xl font-bold mb-2">Join TravelAI</h1>
-            <p className="text-gray-600">
-              Start planning your perfect trips with AI
+    <div className="min-h-screen flex">
+
+      {/* ── Left panel ───────────────────────────────────────────────────── */}
+      <div
+        className="hidden lg:flex lg:w-[45%] bg-[#0a1628] flex-col justify-center p-12 relative overflow-hidden gap-10"
+        style={{
+          backgroundImage:
+            'radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-transparent pointer-events-none" />
+
+        {/* Logo */}
+        <div className="relative flex items-center gap-2.5">
+          <div className="w-8 h-8 bg-white/10 border border-white/15 rounded-lg flex items-center justify-center">
+            <Plane className="w-4 h-4 text-white" strokeWidth={1.5} />
+          </div>
+          <span className="text-[11px] font-black tracking-[0.25em] text-white uppercase">
+            TravelAI
+          </span>
+        </div>
+
+        {/* Main copy */}
+        <div className="relative space-y-6">
+          <div>
+            <p className="text-[10px] font-bold tracking-[0.2em] text-blue-400 uppercase mb-3">
+              Join the Mission
+            </p>
+            <h2 className="text-4xl font-black text-white tracking-tight leading-tight">
+              Start Your Journey<br />Today.
+            </h2>
+          </div>
+          <p className="text-slate-400 text-sm leading-relaxed max-w-xs">
+            Create your free account and let AI plan your perfect trip —
+            from destination research to day-by-day itineraries.
+          </p>
+          <div className="space-y-3">
+            {[
+              'Free to use — no credit card needed',
+              'Your data stays private and secure',
+              'Trips ready in under 2 minutes',
+            ].map((feature) => (
+              <div key={feature} className="flex items-center gap-2.5">
+                <CheckCircle2
+                  className="w-4 h-4 text-emerald-400 flex-shrink-0"
+                  strokeWidth={2}
+                />
+                <span className="text-sm text-slate-300">{feature}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+
+      {/* ── Right panel (form) ────────────────────────────────────────────── */}
+      <div className="flex-1 flex items-center justify-center px-6 py-12 bg-white">
+        <div className="w-full max-w-md">
+
+          {/* Mobile logo */}
+          <div className="flex items-center gap-2 mb-8 lg:hidden">
+            <div className="w-7 h-7 bg-[#0a1628] rounded-lg flex items-center justify-center">
+              <Plane className="w-3.5 h-3.5 text-white" strokeWidth={1.5} />
+            </div>
+            <span className="text-[11px] font-black tracking-[0.25em] text-[#0a1628] uppercase">
+              TravelAI
+            </span>
+          </div>
+
+          <div className="mb-8">
+            <h1 className="text-2xl font-black text-[#0a1628] tracking-tight">
+              Create your account
+            </h1>
+            <p className="text-slate-500 text-sm mt-1">
+              Free forever. No credit card required.
             </p>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-                {error}
-              </div>
-            )}
+          {success && (
+            <div className="mb-5 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 text-sm flex items-center gap-2.5">
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0" strokeWidth={2} />
+              <span>Account created! Redirecting to sign in…</span>
+            </div>
+          )}
 
-            {/* Full Name */}
+          {error && (
+            <div className="mb-5 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" strokeWidth={2} />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Full Name</label>
+              <label className="block text-[11px] font-bold tracking-[0.1em] text-slate-500 uppercase mb-1.5">
+                Full Name
+              </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="John Doe"
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition bg-white"
               />
             </div>
 
-            {/* Email */}
             <div>
-              <label className="block text-sm font-medium mb-2">Email Address</label>
+              <label className="block text-[11px] font-bold tracking-[0.1em] text-slate-500 uppercase mb-1.5">
+                Email Address
+              </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="you@example.com"
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition bg-white"
               />
             </div>
 
-            {/* Password */}
             <div>
-              <label className="block text-sm font-medium mb-2">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="••••••••"
-              />
+              <label className="block text-[11px] font-bold tracking-[0.1em] text-slate-500 uppercase mb-1.5">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  placeholder="Min. 6 characters"
+                  className="w-full px-4 py-3 pr-11 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition bg-white"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
+                >
+                  {showPassword
+                    ? <EyeOff className="w-4 h-4" strokeWidth={1.75} />
+                    : <Eye className="w-4 h-4" strokeWidth={1.75} />}
+                </button>
+              </div>
             </div>
 
-            {/* Confirm Password */}
             <div>
-              <label className="block text-sm font-medium mb-2">Confirm Password</label>
+              <label className="block text-[11px] font-bold tracking-[0.1em] text-slate-500 uppercase mb-1.5">
+                Confirm Password
+              </label>
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="••••••••"
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition bg-white"
               />
             </div>
 
-            {/* Terms */}
-            <label className="flex items-start gap-2 text-sm">
-              <input type="checkbox" className="mt-1" required />
-              <span className="text-gray-600 dark:text-gray-400">
+            <label className="flex items-start gap-2.5 text-xs text-slate-500 cursor-pointer pt-1">
+              <input type="checkbox" required className="mt-0.5 rounded border-slate-300 flex-shrink-0" />
+              <span>
                 I agree to the{' '}
-                <Link href="#" className="text-blue-600 hover:underline">
-                  Terms of Service
-                </Link>{' '}
-                and{' '}
-                <Link href="#" className="text-blue-600 hover:underline">
-                  Privacy Policy
-                </Link>
+                <Link href="#" className="text-blue-600 hover:underline font-semibold">Terms of Service</Link>
+                {' '}and{' '}
+                <Link href="#" className="text-blue-600 hover:underline font-semibold">Privacy Policy</Link>
               </span>
             </label>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition font-medium"
+              className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#0a1628] hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-slate-900/20 tracking-wide mt-2"
             >
-              {isLoading ? 'Creating account...' : 'Create Account'}
+              {isLoading ? (
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  Create Account
+                  <ArrowRight className="w-4 h-4" strokeWidth={2} />
+                </>
+              )}
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white dark:bg-gray-900 text-gray-500">
-                Or sign up with
-              </span>
-            </div>
+          <div className="my-6 flex items-center gap-3">
+            <div className="flex-1 h-px bg-slate-100" />
+            <span className="text-[11px] text-slate-400 tracking-wide uppercase font-medium">
+              Or sign up with
+            </span>
+            <div className="flex-1 h-px bg-slate-100" />
           </div>
 
-          {/* Social Buttons */}
-          <div className="grid grid-cols-2 gap-4">
-            <button type="button" className="py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-              Google
-            </button>
-            <button type="button" className="py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-              GitHub
-            </button>
+          <div className="grid grid-cols-2 gap-3">
+            {['Google', 'GitHub'].map((provider) => (
+              <button
+                key={provider}
+                type="button"
+                className="py-3 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition tracking-wide"
+              >
+                {provider}
+              </button>
+            ))}
           </div>
 
-          {/* Sign In Link */}
-          <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-center text-sm text-slate-500 mt-6">
             Already have an account?{' '}
-            <Link href="/auth/login" className="text-blue-600 hover:underline font-medium">
+            <Link href="/auth/login" className="text-blue-600 hover:underline font-bold">
               Sign in
             </Link>
           </p>
         </div>
-      </main>
-      <Footer />
+      </div>
     </div>
   );
 }

@@ -39,3 +39,54 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# ---- project-specific ----
+
+# cloned reference repo (not part of this project)
+/pfa_repo/
+
+# database (Prisma dev/local databases)
+*.db
+*.db-journal
+/prisma/*.db
+/prisma/migrations/**/dev.db*
+
+# Python (helper/preprocessing scripts)
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.ipynb_checkpoints/
+
+# LaTeX build artifacts (report_original.tex)
+*.aux
+*.lof
+*.log
+*.lot
+*.fls
+*.out
+*.toc
+*.fmt
+*.fot
+*.cb
+*.cb2
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+*.synctex.gz
+*.fdb_latexmk
+*.nav
+*.snm
+*.vrb
+
+# editor / OS
+.vscode/*
+!.vscode/extensions.json
+Thumbs.db
+Desktop.ini
+
+# Claude Code local files
+.claude/

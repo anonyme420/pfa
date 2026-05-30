@@ -14,10 +14,10 @@ export default function ChatPage() {
   const [showLoading, setShowLoading] = useState(true);
 
   useEffect(() => {
-    if (!isLoading && !session.isAuthenticated) {
+    if (!isLoading && !showLoading && !session.isAuthenticated) {
       router.push('/auth/login');
     }
-  }, [session.isAuthenticated, isLoading, router]);
+  }, [session.isAuthenticated, isLoading, showLoading, router]);
 
   useEffect(() => {
     // Show loading screen for 2.5 seconds

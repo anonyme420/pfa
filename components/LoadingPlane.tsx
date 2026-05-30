@@ -10,7 +10,7 @@ export default function LoadingPlane() {
 
       {/* Flying plane - full width animation */}
       <div className="absolute top-1/3 transform -translate-y-1/2 animate-fly-plane-full-width">
-        <Plane className="w-16 h-16 text-blue-600 drop-shadow-lg rotate-45" strokeWidth={1.5} />
+        <Plane className="w-16 h-16 text-black drop-shadow-lg rotate-45" strokeWidth={1.5} />
       </div>
 
       {/* Loading text at bottom */}

@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useState,
+  useEffect,
   ReactNode,
   useCallback,
 } from 'react';
@@ -19,6 +20,8 @@ interface ChatContextType {
   addMessage: (message: ChatMessage) => void;
   setCurrentSession: (session: ChatSession) => Promise<void>;
   loadSessions: () => Promise<void>;
+  deleteSession: (sessionId: string) => Promise<void>;
+  updateSession: (sessionId: string, title: string) => Promise<void>;
   isLoading: boolean;
   error: string | null;
 }
@@ -31,6 +34,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { session: authSession } = useAuth();
+
+  // Clear all chat state whenever the logged-in user changes (login, logout, switch account)
+  useEffect(() => {
+    setCurrentSessionState(null);
+    setSessionsState([]);
+    setError(null);
+  }, [authSession.user?.id]);
 
   const loadSessions = useCallback(async () => {
     if (!authSession.user) return;
@@ -48,7 +58,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [authSession.user]);
+  }, [authSession.user?.id]);
 
   const createSession = useCallback(
     async (title: string) => {
@@ -135,6 +145,22 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const deleteSession = useCallback(async (sessionId: string) => {
+    await chatService.deleteSession(sessionId);
+    setSessionsState((prev) => prev.filter((s) => s.id !== sessionId));
+    setCurrentSessionState((prev) => (prev?.id === sessionId ? null : prev));
+  }, []);
+
+  const updateSession = useCallback(async (sessionId: string, title: string) => {
+    await chatService.updateSession(sessionId, title);
+    setSessionsState((prev) =>
+      prev.map((s) => (s.id === sessionId ? { ...s, title } : s))
+    );
+    setCurrentSessionState((prev) =>
+      prev?.id === sessionId ? { ...prev, title } : prev
+    );
+  }, []);
+
   return (
     <ChatContext.Provider
       value={{
@@ -145,6 +171,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         addMessage,
         setCurrentSession,
         loadSessions,
+        deleteSession,
+        updateSession,
         isLoading,
         error,
       }}
