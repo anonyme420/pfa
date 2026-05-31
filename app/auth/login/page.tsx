@@ -209,13 +209,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="my-6 flex items-center gap-3">
-            <div className="flex-1 h-px bg-slate-100" />
-            <span className="text-[11px] text-slate-400 tracking-wide uppercase font-medium">
-              Or continue with
-            </span>
-            <div className="flex-1 h-px bg-slate-100" />
-          </div>
+          
 
          
 
