@@ -240,18 +240,6 @@ export default function SignupPage() {
             <div className="flex-1 h-px bg-slate-100" />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            {['Google', 'GitHub'].map((provider) => (
-              <button
-                key={provider}
-                type="button"
-                className="py-3 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition tracking-wide"
-              >
-                {provider}
-              </button>
-            ))}
-          </div>
-
           <p className="text-center text-sm text-slate-500 mt-6">
             Already have an account?{' '}
             <Link href="/auth/login" className="text-blue-600 hover:underline font-bold">
