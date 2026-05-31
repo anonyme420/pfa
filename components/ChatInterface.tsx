@@ -296,8 +296,8 @@ interface RichMessage extends ChatMessage {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-const POLL_INITIAL_DELAY_MS = 30_000;           // wait 30s before first poll
-const POLL_INTERVAL_MS      = 1_000;            // then poll every 1s
+const POLL_INITIAL_DELAY_MS = 60_000;           // wait 1 min before first poll
+const POLL_INTERVAL_MS      = 10_000;           // then poll every 10s
 const POLL_TIMEOUT_MS       = 30 * 60 * 1_000; // 30 min max
 
 export default function ChatInterface() {
